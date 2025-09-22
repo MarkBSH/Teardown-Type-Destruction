@@ -9,7 +9,7 @@ public class InitiateFullObject : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(SpawnFullObject(Vector3.zero, m_TempData));
+        StartCoroutine(SpawnFullObject(Vector3.up, m_TempData));
     }
 
     public IEnumerator SpawnFullObject(Vector3 position, FullObjectData data)
@@ -32,6 +32,7 @@ public class InitiateFullObject : MonoBehaviour
                         cube.name = $"Cube_{x}_{y}_{z}";
                         cube.transform.SetParent(parentObject.transform);
                         destructableParent.m_ConnectedCubes.Add(cube);
+                        destructableParent.m_ConnectedCubeNames.Add(cube.name);
                         cube.GetComponent<Renderer>().material.color = data.AvailableColors[Random.Range(0, data.AvailableColors.Length)];
                         DestructableCube destructable = cube.GetComponent<DestructableCube>();
                         destructable.m_Strength = data.CubeStrength;
@@ -67,7 +68,18 @@ public class InitiateFullObject : MonoBehaviour
         triggerRb.useGravity = false;
         triggerRb.excludeLayers = LayerMask.GetMask("Destruction Cube", "Destruction Parent");
 
-        SpawnWreckingBall(position + new Vector3(0, 10, 0));
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
+        SpawnWreckingBall(position + new Vector3(1, 10, 0));
+        yield return new WaitForSeconds(3f);
     }
 
     private void SpawnWreckingBall(Vector3 position)

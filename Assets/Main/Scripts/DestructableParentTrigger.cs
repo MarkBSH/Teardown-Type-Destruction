@@ -6,7 +6,6 @@ public class DestructableParentTrigger : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log("Trigger exited by: " + other.gameObject.name);
         if (other.CompareTag("Destructing Object") && !m_HasChecked)
         {
             DestructableParent parent = transform.parent.GetComponent<DestructableParent>();

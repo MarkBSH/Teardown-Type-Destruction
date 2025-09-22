@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1361615054431479482}
   - component: {fileID: 5453387867622030260}
+  - component: {fileID: 6743825017748730921}
   - component: {fileID: 2148222191570061967}
   - component: {fileID: 3032212564410639629}
   - component: {fileID: 883917219775274098}
@@ -50,6 +51,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DestructingObject
   m_Strength: 30
   m_Force: 0
+--- !u!114 &6743825017748730921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1059322347104564976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47065371dd394e64f9d8c415638e157c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DestroyAfter
+  m_Time: 3
 --- !u!33 &2148222191570061967
 MeshFilter:
   m_ObjectHideFlags: 0

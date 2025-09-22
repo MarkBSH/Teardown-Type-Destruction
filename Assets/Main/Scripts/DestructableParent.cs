@@ -5,6 +5,7 @@ using UnityEngine;
 public class DestructableParent : MonoBehaviour
 {
     public List<GameObject> m_ConnectedCubes = new();
+    public List<string> m_ConnectedCubeNames = new();
     public List<GameObject> m_ConnectedPartsList = new();
     public float m_CubeSize;
 
@@ -12,8 +13,13 @@ public class DestructableParent : MonoBehaviour
     {
         m_ConnectedPartsList.Clear();
 
-        DestructableCube cube = m_ConnectedCubes[0].GetComponent<DestructableCube>();
-        StartCoroutine(cube.CheckConnectedSides());
+        if (m_ConnectedCubes.Count == 0)
+        {
+            Destroy(gameObject, 0.1f);
+            return;
+        }
+
+        AddPartCube(m_ConnectedCubes[0]);
 
         StartCoroutine(WaitAndEvaluate());
     }
@@ -22,11 +28,43 @@ public class DestructableParent : MonoBehaviour
     {
         m_ConnectedPartsList.Add(cube);
         m_ConnectedCubes.RemoveAt(m_ConnectedCubes.IndexOf(cube));
+        m_ConnectedCubeNames.RemoveAt(m_ConnectedCubeNames.IndexOf(cube.name));
+
+        CheckSideConnections(cube);
+    }
+
+    private void CheckSideConnections(GameObject cube)
+    {
+        string cubeName = cube.name;
+        string[] nameParts = cubeName.Split('_');
+
+        int x = int.Parse(nameParts[1]);
+        int y = int.Parse(nameParts[2]);
+        int z = int.Parse(nameParts[3]);
+
+        TryExploreNeighbor(nameParts[0], x + 1, y, z);
+        TryExploreNeighbor(nameParts[0], x - 1, y, z);
+        TryExploreNeighbor(nameParts[0], x, y + 1, z);
+        TryExploreNeighbor(nameParts[0], x, y - 1, z);
+        TryExploreNeighbor(nameParts[0], x, y, z + 1);
+        TryExploreNeighbor(nameParts[0], x, y, z - 1);
+    }
+
+    private void TryExploreNeighbor(string prefix, int x, int y, int z)
+    {
+        string neighborName = $"{prefix}_{x}_{y}_{z}";
+        int idx = m_ConnectedCubeNames.IndexOf(neighborName);
+
+        if (idx >= 0)
+        {
+            GameObject neighbor = m_ConnectedCubes[idx];
+            AddPartCube(neighbor);
+        }
     }
 
     private IEnumerator WaitAndEvaluate()
     {
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(1f);
 
         int minX = int.MaxValue;
         int maxX = int.MinValue;
@@ -87,14 +125,7 @@ public class DestructableParent : MonoBehaviour
             destructableParent.m_ConnectedCubes.Add(m_ConnectedPartsList[i]);
         }
 
-        if (m_ConnectedCubes.Count > 0)
-        {
-            ConnectionCheck();
-        }
-        else
-        {
-            Destroy(gameObject, 0.1f);
-        }
+        ConnectionCheck();
     }
 
     public void DetachAllCubes(GameObject destructedBy, float force)
