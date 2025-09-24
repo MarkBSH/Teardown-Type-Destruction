@@ -8,13 +8,10 @@ public class DestructableCube : MonoBehaviour
     public float m_Mass = 1f;
     public float m_DespawnTime = 5f;
 
-    private void Start()
-    {
-        m_ParentObject = transform.parent.gameObject;
-    }
-
     public void DetachAndDespawn(GameObject destructedBy, float force)
     {
+        m_ParentObject = transform.parent.gameObject;
+
         if (m_ParentObject != null)
         {
             m_ParentObject.GetComponent<DestructableParent>().m_ConnectedCubes.Remove(gameObject);

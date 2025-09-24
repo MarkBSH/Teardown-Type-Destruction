@@ -1,6 +1,61 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using Unity.Jobs;
+using Unity.Collections;
+
+public struct CheckCubeSidesJob : IJob
+{
+    public FixedString64Bytes cubeName64;
+    public NativeArray<FixedString64Bytes> connectedCubeList;
+    public NativeArray<FixedString64Bytes> connectedToList;
+    public NativeArray<FixedString64Bytes> resultList;
+
+    public void Execute()
+    {
+        string cubeName = cubeName64.ToString();
+        string[] nameParts = cubeName.Split('_');
+
+        int x = int.Parse(nameParts[1]);
+        int y = int.Parse(nameParts[2]);
+        int z = int.Parse(nameParts[3]);
+
+        for (int i = 0; i < 6; i++)
+        {
+            int neighborX = x;
+            int neighborY = y;
+            int neighborZ = z;
+
+            switch (i)
+            {
+                case 0: neighborX++; break;
+                case 1: neighborX--; break;
+                case 2: neighborY++; break;
+                case 3: neighborY--; break;
+                case 4: neighborZ++; break;
+                case 5: neighborZ--; break;
+            }
+
+            string neighborName = $"{nameParts[0]}_{neighborX}_{neighborY}_{neighborZ}";
+            connectedToList[i] = new FixedString64Bytes(neighborName);
+        }
+
+        ExistanceCheck();
+    }
+
+    public void ExistanceCheck()
+    {
+        int index = 0;
+        for (int i = 0; i < connectedToList.Length; i++)
+        {
+            if (connectedCubeList.Contains(connectedToList[i]))
+            {
+                resultList[index] = connectedToList[i];
+                index++;
+            }
+        }
+    }
+}
 
 public class DestructableParent : MonoBehaviour
 {
@@ -19,9 +74,45 @@ public class DestructableParent : MonoBehaviour
             return;
         }
 
-        AddPartCube(m_ConnectedCubes[0]);
+        AddCheckCubeSidesJob(m_ConnectedCubes[0]);
 
         StartCoroutine(WaitAndEvaluate());
+    }
+
+    private void AddCheckCubeSidesJob(GameObject checkCube)
+    {
+        CheckCubeSidesJob job = new()
+        {
+            cubeName64 = new FixedString64Bytes(checkCube.name),
+            connectedCubeList = new NativeArray<FixedString64Bytes>(m_ConnectedCubeNames.Count, Allocator.TempJob),
+            connectedToList = new NativeArray<FixedString64Bytes>(6, Allocator.TempJob),
+            resultList = new NativeArray<FixedString64Bytes>(6, Allocator.TempJob)
+        };
+
+        for (int i = 0; i < m_ConnectedCubeNames.Count; i++)
+        {
+            job.connectedCubeList[i] = new FixedString64Bytes(m_ConnectedCubeNames[i]);
+        }
+
+        JobHandle handle = job.Schedule();
+        handle.Complete();
+
+        for (int i = 0; i < job.resultList.Length; i++)
+        {
+            if (job.resultList[i].IsEmpty) continue;
+
+            string resultName = job.resultList[i].ToString();
+            int idx = m_ConnectedCubeNames.IndexOf(resultName);
+            if (idx >= 0)
+            {
+                GameObject neighbor = m_ConnectedCubes[idx];
+                AddPartCube(neighbor);
+            }
+        }
+
+        job.connectedCubeList.Dispose();
+        job.connectedToList.Dispose();
+        job.resultList.Dispose();
     }
 
     public void AddPartCube(GameObject cube)
@@ -64,7 +155,7 @@ public class DestructableParent : MonoBehaviour
 
     private IEnumerator WaitAndEvaluate()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.05f);
 
         int minX = int.MaxValue;
         int maxX = int.MinValue;
@@ -123,6 +214,7 @@ public class DestructableParent : MonoBehaviour
         {
             m_ConnectedPartsList[i].transform.SetParent(newParent.transform);
             destructableParent.m_ConnectedCubes.Add(m_ConnectedPartsList[i]);
+            destructableParent.m_ConnectedCubeNames.Add(m_ConnectedPartsList[i].name);
         }
 
         ConnectionCheck();
